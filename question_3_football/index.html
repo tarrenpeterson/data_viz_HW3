@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!-- set styles on the top -->
+    <style>
+        .chart-container {
+            max-width: 1050px;
+            /* border: 2px solid red; */
+            margin: 0 auto;
+            /* auto centers the div */
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', 'Arial', 'sans-serif';
+        }
+
+        svg {
+            /* border: 2px solid purple; */
+            overflow: visible;
+        }
+
+        .headline {
+            margin-left: 30px;
+            margin-top: 26px;
+            font-family: "nyt-cheltenham", georgia, "times new roman", times, serif;
+            font-weight: 700;
+            font-size: 27px;
+            line-height: 30px;
+            max-width: 600px;
+            margin-bottom: 19px;
+            /* text-align: center; */
+        }
+
+        .x .tick line {
+            stroke: rgba(0, 0, 0, .2);
+        }
+
+        .y .tick line {
+            stroke: rgba(0, 0, 0, .2);
+        }
+
+        .x .domain {
+            display: none;
+        }
+
+        .y .domain {
+            display: none;
+        }
+
+        .y .tick text {
+            font-size: 14px;
+            fill: #333;
+
+        }
+
+        .x .tick text {
+            font-size: 14px;
+            fill: #333;
+        }
+
+        .change-button {
+            margin-left: 30px;
+            font-size: 18px;
+            display: flex;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', 'Arial', 'sans-serif';
+            padding: 14px;
+            justify-content: center;
+            width: 140px;
+            background-color: black;
+            color: white;
+            font-weight: bold;
+            position: relative;
+            border-radius: 6px;
+            cursor: pointer;
+            transition-duration: 0.4s;
+            /* margin: 0 auto; */
+        }
+
+        .change-button:hover{
+            background-color: gray; /* Green */
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chart-container">
+        <div class="headline">
+            No. 1: Playoff Wins
+        </div>
+
+        <button class="change-button">View by Age</button>
+
+        <svg width="1050px" height="1000px">
+
+        </svg>
+    </div>
+</body>
+
+<script src="https://d3js.org/d3.v6.min.js"></script>
+<!-- we're using d3 version 6 (the latest version) for all out work -->
+
+<script>
+    console.log({ d3 })
+
+    let width = 800;
+    let height = 500;
+
+    let svg = d3.select("body")
+        .select("svg")
+
+    console.log(svg)
+
+
+    //console.log
+
+    //arrays
+    //objects
+    //functions
+
+    var lookup = d3.json('player-lookup.json').then(function (lookup) {
+
+        console.log(lookup['BradTo00'])
+
+        d3.csv("cumulative-stats.csv").then(function (data) {
+
+            //when temp is loaded, then pass data into this block
+            //all references to the data need to be in this block
+
+            //d3.csv is part of a suite of other functions that can do json, xml, tsv too.  
+            //https://github.com/d3/d3-fetch
+
+
+            data.forEach(function (row) {
+                // row.date = new Date( row.date + "T00:00")
+                row.year = +row.year 
+                row.playoff_wins = +row.playoff_wins
+                row.name = lookup[row.player_id].last_name
+                row.age = lookup[row.player_id].age_start + (row.year - lookup[row.player_id].year_start)
+                row.max_year = lookup[row.player_id].year_end
+                row.max_age = lookup[row.player_id].age_start + (lookup[row.player_id].year_end - lookup[row.player_id].year_start)
+                row.max_wins = +row.max_wins
+            })
+
+            console.log(data)
+
+
+            let year_state = 'year'
+            let max_var = "max_year"
+
+            let margin = { top: 30, right: 10, bottom: 10, left: 30 };
+
+            let x = d3.scaleLinear()
+                .domain(d3.extent(data.map(function (d) { return d[year_state] }))) //d3 extent
+                .range([margin.left, width + margin.left])
+
+            let y = d3.scaleLinear()
+                .domain(d3.extent(data.map(function (d) { return d.playoff_wins })))
+                .range([height - margin.bottom, margin.top])
+
+
+            let yAxisSettings = d3.axisRight(y) //set axis to the left
+                .ticks(5) //approx how many ticks, the function will not necesarily give you that number
+                .tickSize(-width) //size of tick lines
+                .tickPadding(10) //distance from tick labels to tick marks
+                .tickValues([5, 10, 15, 20, 25, 30, 35])
+                // .style('stroke', '5px')
+
+            let xAxisSettings = d3.axisBottom(x)
+                .tickValues([1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020])
+                .tickSize(10)
+                .tickPadding(10)
+                .tickFormat(d3.format("d"))
+
+            let bg = svg.append("rect")
+                .attr("x", margin.left)
+                .attr("y", 0)
+                .attr("width", width)
+                .attr("height", height)
+                .style("fill", "none")
+
+            // //adding to the axes to our chart
+            let xAxisTicks = svg.append("g")
+                .attr("class", "x axis") //give each axis a class
+                .call(xAxisSettings)
+                .attr("transform", `translate(0,${height - margin.bottom})`)
+
+            let yAxisTicks = svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxisSettings)
+                .attr("transform", `translate(${width + margin.left}, 0)`)
+            
+            let baseline = svg.append("line")
+                .attr("x1", margin.left)
+                .attr("x2", width + margin.left)
+                .attr("y1", y(0))
+                .attr("y2", y(0))
+                .style("stroke", "black")
+                .style("stroke-width", "2px")
+
+            let line_var = d3.line() //define a line function
+                .x(function (d) { return x(d[year_state]) }) //accessing date 
+                .y(function (d) { return y(d.playoff_wins) }) //accesssing value 
+
+            filteredData = data.filter(function(d) {return d.max_wins != 0})
+            let grouped_data = d3.group(filteredData, d => d.player_id)
+
+            console.log(grouped_data)
+
+            let players = Array.from(grouped_data.keys())
+
+            let line_path = svg.append("g")
+                .selectAll(".line")
+                .data(grouped_data)
+                .join("path")
+                .attr("class", function(d) {
+                    return "line " +  d[0]
+                })
+                .attr("d", function(d) {
+                    return line_var(d[1])
+                })
+                .style("fill", "none")
+                .style("stroke", d => {
+                    if(d[1].slice(-1)[0]['year'] == 2021) {
+                        return "#33b9ff"
+                    } 
+                    else if (d[0] == "BradTe00") {
+                        return "#999"
+                    }
+                    else if (d[0] == "MontJo01") {
+                        return "#999"
+                    }
+                    else if (d[0] == "ElwaJo00") {
+                        return "#999"
+                    }
+                    else if (d[0] == "StarBa00") {
+                        return "#999"
+                    }
+                    else if (d[0] == "TarkFr00") {
+                        return "#999"
+                    }
+                    else {
+                        return "#D3D3D3"
+                    }
+                })
+                .style("stroke-linecap", "round")
+                .style("stroke-width", d => {
+                    if(d[0] == "BradTo00") {
+                        return "3px"
+                    } 
+                    else if (d[0] == "BradTe00") {
+                        return "1.5px"
+                    }
+                    else if (d[0] == "MontJo01") {
+                        return "1.5px"
+                    }
+                    else if (d[0] == "ElwaJo00") {
+                        return "1.5px"
+                    }
+                    else if (d[0] == "StarBa00") {
+                        return "1.5px"
+                    }
+                    else if (d[0] == "TarkFr00") {
+                        return "1.5px"
+                    }
+                    else {
+                        return "1px"
+                    }
+                })
+            
+            let circles = svg.append("g")
+                .selectAll("dot")
+                .data(grouped_data)
+                .enter()
+                .append("circle")
+                .style("fill", d => {
+                    if(d[1].slice(-1)[0]['year'] == 2021) {
+                        return "#33b9ff"
+                    }
+                    else if (d[0] == "BradTe00") {
+                    return "#999"
+                    }
+                    else if (d[0] == "MontJo01") {
+                        return "#999"
+                    }
+                    else if (d[0] == "ElwaJo00") {
+                        return "#999"
+                    }
+                    else if (d[0] == "StarBa00") {
+                        return "#999"
+                    }
+                    else if (d[0] == "TarkFr00") {
+                        return "#999"
+                    }
+                    else {
+                        return "#D3D3D3"
+                    }
+            })
+                .attr("cx", function(d) { return x(d[1].slice(-1)[0][year_state] )})
+                .attr("cy", function(d) { return y(d[1].slice(-1)[0]['playoff_wins'] )})
+                .attr("r", d =>{
+                if (d[0] == "BradTo00") {
+                    return 5
+                }
+                else { return 2}
+            })
+
+            let labels = svg.append("g")
+                .selectAll("text")
+                .data(grouped_data)
+                .enter()
+                .append("text")
+                .attr("x", function(d) { return x(d[1].slice(-1)[0][year_state] )})
+                .attr("y", function(d) { return y(d[1].slice(-1)[0]['playoff_wins'] )})
+                .attr("dx", d => {
+                if(d[0] == "BradTo00") {
+                    return -55
+                }
+                else {return 7}})
+                .attr("dy", d => {
+                if(d[0] == "BradTo00") {
+                    return -12
+                }
+                else {return 3}})
+                .text(d => d[1].slice(-1)[0]['name'] )
+                .style("fill", d => {
+                if(d[0] == "BradTo00") {
+                    return "black"
+                } 
+                else if (d[0] == "BradTe00") {
+                    return "gray"
+                }
+                else if (d[0] == "MontJo01") {
+                    return "gray"
+                }
+                else if (d[0] == "ElwaJo00") {
+                    return "gray"
+                }
+                else if (d[0] == "StarBa00") {
+                    return "gray"
+                }
+                else if (d[0] == "TarkFr00") {
+                    return "gray"
+                }
+                else {
+                    return "none"
+                }
+                })
+                .style("font-size", d => {
+                    if(d[0] == "BradTo00") {
+                    return "28px"
+                }
+                else { return "14px"}
+                })
+                .style("font-weight", d => {
+                    if(d[0] == "BradTo00") {
+                    return "500"
+                }
+                })
+
+            let button = d3.select(".change-button").on("click", update)
+
+            function update() {
+                console.log("update")
+                console.log("year state" + year_state)
+
+                if (year_state == 'year'){
+                    year_state = 'age'
+                    button.html("View by Year")
+                    xAxisSettings
+                        .tickValues([25, 30, 35, 40])
+                }
+                else {
+                    year_state = 'year'
+                    button.html("View by Age")
+                    xAxisSettings
+                        .tickValues([1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020])
+                }
+                console.log('new year state' + year_state)
+
+                var transit = d3.transition()
+                    .duration(1000)
+                    .ease(d3.easeCubic)
+                
+                x.domain(d3.extent(data.map(function (d) {return d[year_state] })))
+                
+                xAxisTicks
+                    .call(xAxisSettings)
+                
+                line_path
+                    .transition(transit)
+                    .attr("d", function(d) {return line_var(d[1])})
+                
+                circles
+                    .transition(transit)
+                    .attr("cx", function(d) { return x(d[1].slice(-1)[0][year_state] )})
+                
+                labels
+                    .transition(transit)
+                    .attr("x", function(d) { return x(d[1].slice(-1)[0][year_state] )})
+            }
+
+
+        })
+    })
+</script>
