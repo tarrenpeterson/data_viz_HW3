@@ -25,6 +25,7 @@
             flex-wrap: wrap;
             align-items: flex-end;
             max-width: 800px;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .headline {
@@ -40,6 +41,7 @@
 
         .small-label {
             font-size: 12px;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .label-container { 
@@ -50,6 +52,7 @@
             font-size: 13px;
             line-height: 1.2;
             justify-content: space-between;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .elements {
@@ -61,6 +64,7 @@
             -ms-flex-align: center;
             align-items: center;
             font-size: 13 px;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .block{
@@ -68,38 +72,45 @@
             margin-top: -2px;
             width: 11px;
             height: 11px;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .x .tick line {
             stroke: rgba(0, 0, 0, .2);
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .y .tick line {
             stroke: rgba(0, 0, 0, .2);
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .x .domain {
             display: none;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .y .domain {
             display: none;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .y .tick text {
             font-size: 14px;
             fill: #333;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
 
         }
 
         .x .tick text {
             font-size: 14px;
             fill: #333;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .label {
-            font-size: 16px;
-            font-weight: 200;
+            font-size: 18px;
+            font-weight: 400;
             font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
@@ -111,6 +122,7 @@
 
         .g-source .g-credit {
             display: inline-block;
+            font-family: nyt-franklin, arial, helvetica, sans-serif;
         }
 
         .g-credit {
@@ -372,7 +384,7 @@
             .append("title")
             .transition()
             .duration(2000)
-            .ease(d3.easeBounceInOut)
+            .ease(d3.easeSin)
 
             uninsured
                 .attr("class", "label")
@@ -382,7 +394,7 @@
                 .style("fill", "white")
                 .transition()
                 .duration(2000)
-                .ease(d3.easeBounceInOut)
+                .ease(d3.easeSin)
             
             medicare
                 .attr("class", "label")
@@ -392,7 +404,7 @@
                 .style("fill", "black")
                 .transition()
                 .duration(2000)
-                .ease(d3.easeBounceInOut)
+                .ease(d3.easeSin)
             }
 
         var timer = d3.interval(update, 4000)
